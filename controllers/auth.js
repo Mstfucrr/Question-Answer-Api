@@ -1,8 +1,9 @@
 const User = require("../models/User")
+const CustomError = require("../helpers/error/CustomError")
 
 const register = async (req, res, next) => {
-    const name = "MUstafa Uçar";
-    const email = "mmgmail.com";
+    const name = "Mustafa Uçar";
+    const email = "mm@gmail.com";
     const password = "111111"
 
     try {
@@ -22,7 +23,7 @@ const register = async (req, res, next) => {
 
 
 const errorTest = (req, res, next) => {
-    throw new Error("Bir hata oluştu");
+    return next(new TypeError("Custom Bir hata oluştu"));
 }
 
 module.exports = {
