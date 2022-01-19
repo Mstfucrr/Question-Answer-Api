@@ -14,7 +14,7 @@ connectDatabase()
 const app = express()
 const PORT = process.env.PORT
 
-app.use("/api",routers)
+app.use("/api", routers)
 
 
 app.get("/", (req, res) => {
@@ -25,5 +25,6 @@ app.get("/", (req, res) => {
 app.use(customErrorHandler)
 
 app.listen(PORT, () => {
-    console.log(`app started http://127.0.0.1:${PORT} listenings : ${process.env.NODE_ENV}`);
+    console.log(`app started http://127.0.0.1:${PORT} listenings : ${process.env.NODE_ENV}
+POSTMAN : https://web.postman.co/workspace/Api~1197f635-a7c5-4692-8749-0dcf3f2dbd20/collection/19037639-194da99d-dbf2-4ec5-8826-716b8218ee5d?ctx=documentation`);
 })
