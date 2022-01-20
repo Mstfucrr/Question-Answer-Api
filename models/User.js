@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 
@@ -10,7 +11,7 @@ const UserSchema = new Schema({
     email: {
         type: String,
         required: [true, "Please Enter Email"],
-        unique: [true, "Please try different Email"],
+        unique: true,
         match: [
             /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
             "Please provide a valid email address"
@@ -39,6 +40,19 @@ const UserSchema = new Schema({
     blocked: { type: Boolean, default: false }
 
 });
+
+UserSchema.methods.generateJwtFromUser = function () {
+    const { JWT_SECRET_KEY, JWT_EXPIRE } = process.env
+    const payload = {
+        id: this._id,
+        name: this.name
+    }
+    const token = jwt.sign(payload, JWT_SECRET_KEY, {
+        expiresIn: JWT_EXPIRE
+    })
+    return token;
+
+}
 
 UserSchema.pre('save', function (next) {
     //parola değişmemişse
