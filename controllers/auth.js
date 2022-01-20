@@ -1,29 +1,23 @@
 const User = require("../models/User")
+const asyncHandler = require("express-async-handler")
 const CustomError = require("../helpers/error/CustomError")
 
-const register = async (req, res, next) => {
-    const name = "Mustafa Uçar";
-    const email = "mm@gmail.com";
-    const password = "111111"
-
-    try {
-        const user = await User.create({
-            name,
-            email,
-            password
-        })
-        res
-            .status(200)
-            .json({ success: true, data: user })
-    } catch (error) {
-        return next(error); // async işlemlerde try catch gerekli
-    }
-
-};
+const register = asyncHandler(async (req, res, next) => {
+    const { name, email, password, role } = req.body
+    const user = await User.create({
+        name,
+        email,
+        password,
+        role
+    })
+    res
+        .status(200)
+        .json({ success: true, data: user })
+});
 
 
 const errorTest = (req, res, next) => {
-    return next(new TypeError("Custom Bir hata oluştu"));
+    return next(new SyntaxError("Custom Bir hata oluştu"));
 }
 
 module.exports = {
