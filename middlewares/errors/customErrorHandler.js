@@ -4,8 +4,11 @@ const customErrorHandler = (err, req, res, next) => {
     if (err.name === 'SyntaxError') {
         customError = new CustomError("Syntax err", 400)
     }
-    else if (err.name === 'ValidationError') {
+    if (err.name === 'ValidationError') {
         customError = new CustomError(err.message, 400)
+    }
+    if (err.code === 11000) {
+        customError = new CustomError("Bu eposta adresi kullanımda",400)
     }
     res
         .status(customError.status || 500)
