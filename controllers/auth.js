@@ -10,6 +10,7 @@ const register = asyncHandler(async (req, res, next) => {
         password,
         role
     })
+    const token = user.generateJwtFromUser();
     res
         .status(200)
         .json({ success: true, data: user })
