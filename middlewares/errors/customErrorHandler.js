@@ -8,7 +8,7 @@ const customErrorHandler = (err, req, res, next) => {
         customError = new CustomError(err.message, 400)
     }
     if (err.code === 11000) {
-        customError = new CustomError("Bu eposta adresi kullanımda",400)
+        customError = new CustomError("E-mail is already in use",400)
     }
     res
         .status(customError.status || 500)
