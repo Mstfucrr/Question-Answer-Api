@@ -1,5 +1,6 @@
 const User = require("../models/User")
 const asyncHandler = require("express-async-handler")
+const { sendJwtToClient } = require("../helpers/authorization/tokenHelpers")
 const CustomError = require("../helpers/error/CustomError")
 
 const register = asyncHandler(async (req, res, next) => {
@@ -10,17 +11,19 @@ const register = asyncHandler(async (req, res, next) => {
         password,
         role
     })
-    const token = user.generateJwtFromUser();
-    res
-        .status(200)
-        .json({ success: true, data: user })
+    sendJwtToClient(user, res)
 });
 
-
-const errorTest = (req, res, next) => {
-    return next(new SyntaxError("Custom Bir hata oluştu"));
+const getUser = (req, res, next) => {
+    res.json({
+        success: true,
+        data: {
+            id: req.user.id, 
+            name : req.user.name
+        }
+    })
 }
 
 module.exports = {
-    register, errorTest
+    register, getUser
 };
