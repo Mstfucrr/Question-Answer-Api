@@ -3,6 +3,7 @@ const connectDatabase = require('./helpers/database/connectDatabase')
 const customErrorHandler = require("./middlewares/errors/customErrorHandler")
 const dotenv = require('dotenv')
 const routers = require('./routers/index')
+const path = require('path')
 
 dotenv.config({
     path: "./config/env/config.env"
@@ -24,6 +25,9 @@ app.get("/", (req, res) => {
 
 
 app.use(customErrorHandler)
+
+// StaticFiles
+app.use(express.static(path.join(__dirname,"public")))
 
 app.listen(PORT, () => {
     console.log(`app started http://127.0.0.1:${PORT} listenings : ${process.env.NODE_ENV}
