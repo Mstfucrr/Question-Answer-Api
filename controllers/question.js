@@ -27,7 +27,7 @@ const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
             data: questions
 
         })
-        
+
 });
 
 const getSingleQuestion = asyncErrorWrapper(async (req, res, next) => {
@@ -51,7 +51,7 @@ const editQuestion = asyncErrorWrapper(async (req, res, next) => {
     question.content = information.content || question.content; // eğer content yoksa eski content'ı kullan
 
     question = await question.save();
-    
+
     return res.status(200)
         .json({
             success: true,
@@ -71,6 +71,47 @@ const deleteQuestion = asyncErrorWrapper(async (req, res, next) => {
         })
 });
 
+const likeQuestion = asyncErrorWrapper(async (req, res, next) => {
+    const { id } = req.params;
+
+    const question = await Question.findById(id); // soruyu bul
+ 
+    if (question.likes.includes(req.user.id)) {
+        return next(new CustomError("You already liked this question", 400)); // eğer kullanıcı daha önce like yapmışsa hata döndür
+    }
+
+    question.likes.push(req.user.id); // kullanıcının id'sini sorunun like'larına ekle
+
+    await question.save(); // kaydet
+
+    return res.status(200).json({
+        success: true,
+        data: question,
+        message: "Liked the question"
+    })
+
+});
+
+const undoLikeQuestion = asyncErrorWrapper(async (req, res, next) => {
+    const { id } = req.params;
+    const question = await Question.findById(id); // soruyu bul
+
+    if (!question.likes.includes(req.user.id)) { // eğer kullanıcı daha önce like yapmadıysa
+        return next(new CustomError("You can not undo like operation for this question", 400)); // hata döndür
+    }
+
+    const index = question.likes.indexOf(req.user.id); // kullanıcının id'sinin indexini bul
+
+    question.likes.splice(index, 1); // bulduğun indexi sil
+
+    await question.save(); // kaydet
+
+    return res.status(200).json({
+        success: true,
+        data: question,
+        message: "Undo Like for the question"
+    })
+});
 
 
 module.exports = {
@@ -78,5 +119,7 @@ module.exports = {
     getAllQuestions,
     getSingleQuestion,
     editQuestion,
-    deleteQuestion
+    deleteQuestion,
+    likeQuestion,
+    undoLikeQuestion
 };
