@@ -1,6 +1,6 @@
 # Question-Answer-Api
 
-Kaynak : Mustafa Murat Coşkun
+
 <h3> Bağımlılıklar: </h3>
   <ul>
     <li>expressjs - HTTP isteklerini işlemek ve yönlendirmek için sunucu </li>
@@ -27,3 +27,5 @@ Kaynak : Mustafa Murat Coşkun
 <li>helpers/ - Bu klasör, API'miz için 3. parti kütüphaneleri uyarlamak için yardımcı fonksiyonlar içerir.</li>
 <li>dummy/ - Bu klasör, veritabanımız için dummy-generator.js dosyası tarafından oluşturulan sahte verileri içerir.</li>
  </ul>
+
+Kaynak : Mustafa Murat Coşkun ==> <a href="https://github.com/mustafamuratcoskun/question-answer-rest-api" target="_blank"> Link </a>
