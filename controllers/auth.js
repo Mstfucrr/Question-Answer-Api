@@ -16,27 +16,27 @@ const register = asyncErrorWrapper(async (req, res, next) => {
 });
 
 const login = asyncErrorWrapper(async (req, res, next) => {
-    const { email, password } = req.body
-    if (!validateUserInput(email, password))
-        return next(new CustomError("Please check your inputs", 400));
+    const { email, password } = req.body //postman'de body'den alınan değerler
+    if (!validateUserInput(email, password))  //email ve password boş mu kontrolü
+        return next(new CustomError("Please check your inputs", 400)); 
 
-    const user = await User.findOne({ email }).select("+password")
+    const user = await User.findOne({ email }).select("+password") //email'e göre user'ı bulup password'u da getir 
 
-    if (!user || !comparePasword(password, user.password)) {
-        return next(new CustomError("Please check your email or password", 400));
+    if (!user || !comparePasword(password, user.password)) { //user yoksa veya password yanlışsa
+        return next(new CustomError("Please check your email or password", 400)); //hata döndür
     }
-    sendJwtToClient(user, res)
+    sendJwtToClient(user, res) //user varsa token döndür 
 })
 
 const logout = asyncErrorWrapper(async (req, res, next) => {
     const { NODE_ENV } = process.env
     return res.status(200).cookie({
-        httpOnly: true,
-        expires: new Date(Date.now()),
-        secure: NODE_ENV === "development" ? false : true
+        httpOnly: true, //sadece server tarafından değiştirilebilir
+        expires: new Date(Date.now()), //cookie'nin süresi dolmuş olacak ve silinecek 
+        secure: NODE_ENV === "development" ? false : true //https olmadığında çalışmaz 
     }).json({
-        success: true,
-        message: "You have been logged out"
+        success: true, 
+        message: "You have been logged out" 
     });
 })
 
@@ -52,18 +52,41 @@ const getUser = (req, res, next) => {
 const imageUpload = asyncErrorWrapper(async (req, res, next) => {
 
     const user = await User.findByIdAndUpdate(req.user.id, {
-        "profile_image": req.savedProfileImage
+        "profile_image": req.savedProfileImage //middleware'den gelen değer
     }, {
         new: true, //güncellenmiş user döndürmesi için
-        runValidators: true 
+        runValidators: true //validasyonu çalıştırması için
     })
     res.status(200).json({
-        success: true,
+        success: true, 
         message: "Image Upload Successful",
-        data: user
+        data: user //güncellenmiş user döndürmesi için
     })
 })
 
+// Forgot Password
+const forgotPassword = (async (req, res, next) => {
+
+    const resetEmail = req.body.email; //req'den body'den alınan değerler
+    const user = await User.findOne({ email: resetEmail }); //email'e göre user'ı bul
+    // JWT Token tanımı : Bir kullanıcının kimliğini doğrulamak için kullanılan bir JSON nesnesidir.
+    if (!user) { //user yoksa
+        return next(new CustomError("There is no user with that email", 400)); //hata döndür
+    }
+    const resetPasswordToken = user.getResetPasswordTokenFromUser(); //random token oluşturur
+
+    await user.save(); //token'ı kaydet
+    
+    res.json({
+        success: true,
+        message: "Token sent to your email" 
+    });
+
+
+});
+
+
+
 module.exports = {
-    register, login, logout, imageUpload, getUser
+    register, login, logout, imageUpload, getUser, forgotPassword
 };
