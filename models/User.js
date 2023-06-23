@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
+const crypto = require('crypto');
 
 const UserSchema = new Schema({
     name: {
@@ -37,7 +38,9 @@ const UserSchema = new Schema({
     place: { type: String },
     website: { type: String },
     profile_image: { type: String, default: "default.jpg" },
-    blocked: { type: Boolean, default: false }
+    blocked: { type: Boolean, default: false },
+    resetPasswordToken: { type: String },
+    resetPasswordExpire: { type: Date }
 
 });
 
@@ -54,19 +57,35 @@ UserSchema.methods.generateJwtFromUser = function () {
 
 }
 
+UserSchema.methods.getResetPasswordTokenFromUser = function () {
+    const randomHexString = crypto.randomBytes(15).toString("hex"); //15 karakterlik random hex string oluşturur bu stringi token olarak kullanacağız
+
+    const { RESET_PASSWORD_EXPIRE } = process.env; //env dosyasından reset password expire süresini alırız
+
+    const resetPasswordToken = crypto
+        .createHash("SHA256") //sha256 ile hash'leriz, hash = string'i şifreler
+        .update(randomHexString) //random hex string'i update ile hash'leriz 
+        .digest("hex"); //random hex string'i sha256 ile hash'leriz ve digest ile hex formatında döndürürüz 
+    
+    this.resetPasswordToken = resetPasswordToken; //user'ın resetPasswordToken'ını oluşturduğumuz token ile güncelleriz
+    this.resetPasswordExpire = Date.now() + parseInt(RESET_PASSWORD_EXPIRE); //user'ın resetPasswordExpire'ını şu anki zamana eklediğimiz süre kadar arttırırız
+
+    console.log(this.resetPasswordToken, this.resetPasswordExpire);
+};
+
 UserSchema.pre('save', function (next) {
-    //parola değişmemişse
-    if (!this.isModified("password")) {
-        next();
+    //parola değişmemişse 
+    if (!this.isModified("password")) { 
+        next(); //next ile bir sonraki middleware'e geçeriz
     }
 
-    bcrypt.genSalt(10, (err, salt) => {
-        if (err) next(err);
+    bcrypt.genSalt(10, (err, salt) => { //10 karakterlik salt oluştururuz
+        if (err) next(err); //hata varsa next ile bir sonraki middleware'e geçeriz
 
-        bcrypt.hash(this.password, salt, (err, hash) => {
-            if (err) next(err);
-            this.password = hash;
-            next();
+        bcrypt.hash(this.password, salt, (err, hash) => { //parolayı salt ile hash'leriz
+            if (err) next(err); //hata varsa next ile bir sonraki middleware'e geçeriz
+            this.password = hash; //hashlenmiş parolayı user'ın password'ine atarız
+            next(); //next ile bir sonraki middleware'e geçeriz
         })
     })
 })
