@@ -71,11 +71,11 @@ UserSchema.methods.getResetPasswordTokenFromUser = function () {
     this.resetPasswordExpire = Date.now() + parseInt(RESET_PASSWORD_EXPIRE); //user'ın resetPasswordExpire'ını şu anki zamana eklediğimiz süre kadar arttırırız
 
     console.log(this.resetPasswordToken, this.resetPasswordExpire);
+    return resetPasswordToken; //oluşturduğumuz token'ı döndürürüz
 };
 
 UserSchema.pre('save', function (next) {
-    //parola değişmemişse 
-    if (!this.isModified("password")) { 
+    if (!this.isModified("password")) {  //eğer password değişmemişse next ile bir sonraki middleware'e geçeriz
         next(); //next ile bir sonraki middleware'e geçeriz
     }
 
