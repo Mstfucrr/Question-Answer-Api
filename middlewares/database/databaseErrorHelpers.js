@@ -1,4 +1,5 @@
 const User = require("../../models/User");
+const Question = require("../../models/Question");
 const CustomError = require("../../helpers/error/CustomError");
 const asyncErrorWrapper = require("express-async-handler");
 
@@ -14,6 +15,20 @@ const chechUserExist = asyncErrorWrapper(async (req, res, next) => { // asyncErr
     next(); //user varsa next() ile getSingleUser'a git ve user'ı getir
 });
 
+const checkQuestionExist = asyncErrorWrapper(async (req, res, next) => {
+    const { id } = req.params; // id'yi req.params'dan al, eğer req.params'da yoksa req.query'den al
+
+    const question = await Question.findById(id); //id'ye göre question'ı bul
+
+    if (!question) {
+        return next(new CustomError("There is no such question with that id", 400))
+    }
+
+    next(); //question varsa next() ile getSingleQuestion'a git ve question'ı getir
+});
+
+
 module.exports = {
-    chechUserExist
+    chechUserExist,
+    checkQuestionExist
 }
