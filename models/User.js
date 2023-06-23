@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 const crypto = require('crypto');
+const Question = require('./Question');
 
 const UserSchema = new Schema({
     name: {
@@ -88,6 +89,13 @@ UserSchema.pre('save', function (next) {
             next(); //next ile bir sonraki middleware'e geçeriz
         })
     })
-})
+});
+// deleteOne() ile user'ı silmek için bu şekilde bir middleware yazabiliriz
+UserSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+    const user = this;
+    await Question.deleteMany({ user: user._id });
+    next();
+});
+
 
 module.exports = mongoose.model("User", UserSchema)
