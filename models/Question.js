@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const slugify = require('slugify'); // başlıktan otomatik slug oluşturmak için
+const Answer = require('./Answer');
 
 const QuestionSchema = new Schema({
     title : {
@@ -23,7 +24,19 @@ const QuestionSchema = new Schema({
         type : mongoose.Schema.ObjectId, // user id'si
         required : true, // zorunlu
         ref : 'User' // User modeline referans veriyoruz
-    }
+    },
+    likes : [
+        {
+            type : mongoose.Schema.ObjectId,
+            ref : 'User'
+        }
+    ],
+    answers : [
+        {
+            type : mongoose.Schema.ObjectId,
+            ref : 'Answer'
+        }
+    ]
 
 });
 
