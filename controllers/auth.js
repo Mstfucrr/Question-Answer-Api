@@ -19,7 +19,7 @@ const register = asyncErrorWrapper(async (req, res, next) => {
 const login = asyncErrorWrapper(async (req, res, next) => {
     const { email, password } = req.body //postman'de body'den alınan değerler
     if (!validateUserInput(email, password))  //email ve password boş mu kontrolü
-        return next(new CustomError("Please check your inputs", 400)); 
+        return next(new CustomError("Please check your inputs", 400));
 
     const user = await User.findOne({ email }).select("+password") //email'e göre user'ı bulup password'u da getir 
 
@@ -36,19 +36,25 @@ const logout = asyncErrorWrapper(async (req, res, next) => {
         expires: new Date(Date.now()), //cookie'nin süresi dolmuş olacak ve silinecek 
         secure: NODE_ENV === "development" ? false : true //https olmadığında çalışmaz 
     }).json({
-        success: true, 
-        message: "You have been logged out" 
+        success: true,
+        message: "You have been logged out"
     });
 })
 
-const getUser = (req, res, next) => {
-    res.json({
-        success: true,
-        data: {
-            id: req.user.id,
-            name: req.user.name
-        }
-    })
+const getUser = async (req, res, next) => {
+
+    const id = req.user.id //user'ın id'sini al
+
+    await User.findById(id).then((user) => { //id'ye göre user'ı bul
+        return res.status(200).json({
+            success: true,
+            data: user
+        })
+    }).catch(err => {
+        return next(new CustomError(err.message, 400))
+    }
+    )
+
 }
 const imageUpload = asyncErrorWrapper(async (req, res, next) => {
 
@@ -59,7 +65,7 @@ const imageUpload = asyncErrorWrapper(async (req, res, next) => {
         runValidators: true //validasyonu çalıştırması için
     })
     res.status(200).json({
-        success: true, 
+        success: true,
         message: "Image Upload Successful",
         data: user //güncellenmiş user döndürmesi için
     })
@@ -77,7 +83,7 @@ const forgotPassword = (async (req, res, next) => {
     const resetPasswordToken = user.getResetPasswordTokenFromUser(); //random token oluşturur
 
     await user.save(); //token'ı kaydet
-    
+
     const resetPasswordUrl = `http://localhost:5000/api/auth/resetpassword?resetPasswordToken=${resetPasswordToken}`; //token'ı url'e ekle
     const emailTemplate = `
         <h3>Parolanızı sıfırlamak için lütfen aşağıdaki.</h3> <br>
@@ -103,7 +109,7 @@ const forgotPassword = (async (req, res, next) => {
 
     } catch (err) {
         user.resetPasswordToken = undefined; //token'ı undefined yap
-        user.resetPasswordExpire = undefined; 
+        user.resetPasswordExpire = undefined;
         await user.save(); //kaydet 
         return next(new CustomError("Email could not be sent", 500)); //hata döndür
     }
@@ -141,7 +147,20 @@ const resetPassword = asyncErrorWrapper(async (req, res, next) => {
         });
 });
 
+const editDetails = asyncErrorWrapper(async (req, res, next) => {
+
+    const editInformation = req.body; //req'den body'den alınan değerler
+    const user = await User.findByIdAndUpdate(req.user.id, editInformation, { //id'ye göre user'ı bul ve güncelle
+        new: true, //güncellenmiş user döndürmesi için
+        runValidators: true //validasyonu çalıştırması için
+    })
+    res.status(200).json({
+        success: true,
+        data: user //güncellenmiş user döndürmesi için
+    })
+
+})
 
 module.exports = {
-    register, login, logout, imageUpload, getUser, forgotPassword, resetPassword
+    register, login, logout, imageUpload, getUser, forgotPassword, resetPassword, editDetails
 };
