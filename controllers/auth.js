@@ -3,6 +3,7 @@ const asyncErrorWrapper = require("express-async-handler")
 const { sendJwtToClient } = require("../helpers/authorization/tokenHelpers")
 const { validateUserInput, comparePasword } = require("../helpers/input/inputHelpers")
 const CustomError = require("../helpers/error/CustomError")
+const sendEmail = require("../helpers/libraries/sendEmail")
 
 const register = asyncErrorWrapper(async (req, res, next) => {
     const { name, email, password, role } = req.body
@@ -77,16 +78,70 @@ const forgotPassword = (async (req, res, next) => {
 
     await user.save(); //token'ı kaydet
     
-    res.json({
-        success: true,
-        message: "Token sent to your email" 
-    });
+    const resetPasswordUrl = `http://localhost:5000/api/auth/resetpassword?resetPasswordToken=${resetPasswordToken}`; //token'ı url'e ekle
+    const emailTemplate = `
+        <h3>Parolanızı sıfırlamak için lütfen aşağıdaki.</h3> <br>
+        <p><a href="${resetPasswordUrl}" target="_blank">
+            Linke Tıklayınız
+        </a></p>
 
+        <h4>Not: Link 1 saat sonra geçersiz olacaktır.</h4>
+            
+    `;
+    try {
+        await sendEmail({
+            from: process.env.SMTP_EMAIL, //process.env'den alınan değerler
+            to: resetEmail, //req'den body'den alınan değerler
+            subject: "Parola Sıfırlama İsteği", //subject
+            html: emailTemplate //email template'i
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Token Eposta Adresinize Gönderildi"
+        });
+
+    } catch (err) {
+        user.resetPasswordToken = undefined; //token'ı undefined yap
+        user.resetPasswordExpire = undefined; 
+        await user.save(); //kaydet 
+        return next(new CustomError("Email could not be sent", 500)); //hata döndür
+    }
 
 });
 
+const resetPassword = asyncErrorWrapper(async (req, res, next) => {
+
+    const { resetPasswordToken } = req.query; //req'den query'den alınan token değeri
+    const { password } = req.body; //req'den body'den alınan yeni password değeri
+
+    if (!resetPasswordToken) { //token yoksa
+        return next(new CustomError("Please provide a valid token", 400)); //hata döndür
+    }
+
+    let user = await User.findOne({ //token'a göre user'ı bul
+        resetPasswordToken: resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() } //token'ın süresi dolmamışsa yani şu anki tarihten büyükse  gt: büyük , lt: küçük
+    });
+
+    if (!user) { //user yoksa
+        return next(new CustomError("Invalid Token or Session Expired", 404)); //hata döndür
+    }
+
+    user.password = password; //user'ın password'ünü yeni password ile değiştir
+    user.resetPasswordToken = undefined; //token'ı undefined yap
+    user.resetPasswordExpire = undefined; //token'ın süresini undefined yap
+
+    await user.save(); //kaydet
+
+    return res.status(200)
+        .json({
+            success: true,
+            message: "Reset Password Successful"
+        });
+});
 
 
 module.exports = {
-    register, login, logout, imageUpload, getUser, forgotPassword
+    register, login, logout, imageUpload, getUser, forgotPassword, resetPassword
 };
