@@ -27,7 +27,7 @@ const questionSortHelper = (query, req) => {
     }
 }
 
-const paginationHelper = async (model, query, req) => {
+const paginationHelper = async (total, query, req) => {
     const page = parseInt(req.query.page) || 1; // eğer page yoksa 1. sayfayı göster
     const limit = parseInt(req.query.limit) || 5; // eğer limit yoksa 5 veri göster
 
@@ -35,25 +35,24 @@ const paginationHelper = async (model, query, req) => {
     const endIndex = page * limit; // end index : sayfa 1 ise 5, sayfa 2 ise 10, sayfa 3 ise 15
 
     const pagination = {};
-    const total = await model.countDocuments(); // toplam veri sayısı
     if (startIndex > 0) { // eğer 1. sayfada değilsek, önceki sayfaya geçebiliriz
         pagination.previous = { 
             page: page - 1,
             limit: limit
         }
     }
-    console.log("total: " + total)
-    console.log("endIndex: " + endIndex)
-    if (endIndex < total) { // eğer end index toplam veri sayısından küçükse, sonraki sayfaya geçebiliriz
+
+    if (endIndex < total) { // eğer toplam veri sayısından küçüksek, sonraki sayfaya geçebiliriz
         pagination.next = { // sonraki sayfaya geçebiliriz
             page: page + 1,
             limit: limit
         }
     }
-    query = query.skip(startIndex).limit(limit);
     return {
-        query: query,
-        pagination: pagination
+        query: query === undefined ? undefined : query.skip(startIndex).limit(limit),
+        pagination: pagination,
+        startIndex,
+        limit
     }
 }
 

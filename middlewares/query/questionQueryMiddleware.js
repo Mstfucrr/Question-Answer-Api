@@ -21,7 +21,9 @@ const questionQueryMiddleware = function (model, options) {
 
         // pagination
         // gelen query'i paginationHelper'a gönder ve dönen değeri pagination'a ata
-        const paginationResult = await paginationHelper(model, query, req);
+        // toplam queryinin sayısını bul
+        const total = await model.countDocuments();
+        const paginationResult = await paginationHelper(total, query, req);
         query = paginationResult.query;
         pagination = paginationResult.pagination;
 
