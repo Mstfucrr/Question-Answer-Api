@@ -4,11 +4,8 @@ const asyncErrorWrapper = require('express-async-handler')
 
 
 const getAllUsers = asyncErrorWrapper(async (req, res, next) => {
-    const users = await User.find() //tüm user'ları getir; find() içine bir şey yazmazsak tüm user'ları getirir
-    return res.status(200).json({
-        success: true,
-        data: users
-    })
+    return res.status(200)
+    .json(res.queryResults)
 });
 
 const getSingleUser = asyncErrorWrapper(async (req, res, next) => {
