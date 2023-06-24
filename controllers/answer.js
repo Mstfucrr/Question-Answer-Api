@@ -91,6 +91,7 @@ const deleteAnswer = asyncErrorWrapper(async (req, res, next) => {
     await Answer.findByIdAndRemove(answer_id)
         .then(async () => {
             question.answers.splice(question.answers.indexOf(answer_id), 1);
+            question.answerCount = question.answers.length;
             await question.save();
         }).then(() => {
             return res.status(200)
