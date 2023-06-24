@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { askNewQuestion, getAllQuestions, getSingleQuestion, editQuestion, deleteQuestion, likeQuestion, undoLikeQuestion } = require('../controllers/question')
-const { getAccessToRoute , getQuestionOwnerAccess } = require('../middlewares/authorization/auth')
+const { getAccessToRoute, getQuestionOwnerAccess } = require('../middlewares/authorization/auth')
 const { checkQuestionExist } = require('../middlewares/database/databaseErrorHelpers')
 const answer = require('./answer')
 const Question = require('../models/Question')
-const {questionQueryMiddleware} = require('../middlewares/query/questionQueryMiddleware.js')
-
+const { questionQueryMiddleware } = require('../middlewares/query/questionQueryMiddleware.js')
+const { answerQueryMiddleware } = require('../middlewares/query/answerQueryMiddleware');
 
 
 router.get('/',
@@ -15,8 +15,19 @@ router.get('/',
             path: 'user',
             select: 'name profile_image'
         }
-    }),getAllQuestions)
-router.get('/:id', checkQuestionExist, getSingleQuestion)
+    }), getAllQuestions)
+router.get('/:id', checkQuestionExist, answerQueryMiddleware(Question,{
+    population: [
+        {
+            path: 'user',
+            select: 'name profile_image'
+        },
+        {
+            path: 'answers',
+            select: 'content user'
+        }
+    ]
+}), getSingleQuestion)
 
 // add, edit and delete question
 router.post('/ask', getAccessToRoute, askNewQuestion)
