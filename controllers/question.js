@@ -2,6 +2,7 @@ const Question = require('../models/Question');
 const CustomError = require('../helpers/error/CustomError');
 const asyncErrorWrapper = require('express-async-handler');
 
+
 const askNewQuestion = asyncErrorWrapper(async (req, res, next) => {
 
     const information = req.body;
@@ -19,71 +20,8 @@ const askNewQuestion = asyncErrorWrapper(async (req, res, next) => {
 });
 
 const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
-
-    console.log(req.query)
-    let query = Question.find();
-    // search    
-    if (req.query.search) {
-        query = query.where('title', new RegExp(req.query.search, 'i'));
-    }
-
-    // populate
-    let populate = true;
-    let populateObject = {
-        path: 'user',
-        select: 'name profile_image'
-    }
-    if (populate) {
-        query = query.populate(populateObject);
-    }
-
-    // pagination
-    const page = parseInt(req.query.page) || 1; // eğer page yoksa 1. sayfayı göster
-    const limit = parseInt(req.query.limit) || 5; // eğer limit yoksa 5 veri göster
-
-    const startIndex = (page - 1) * limit; // start index : sayfa 1 ise 0, sayfa 2 ise 5, sayfa 3 ise 10
-    const endIndex = page * limit; // end index : sayfa 1 ise 5, sayfa 2 ise 10, sayfa 3 ise 15
-
-    const pagination = {};
-    const total = await Question.countDocuments(); // toplam veri sayısı
-    if (startIndex > 0) { // eğer 1. sayfada değilsek, önceki sayfaya geçebiliriz
-        pagination.previous = { 
-            page: page - 1,
-            limit: limit
-        }
-    }
-
-    if (endIndex < total) { // eğer end index toplam veri sayısından küçükse, sonraki sayfaya geçebiliriz
-        pagination.next = { // sonraki sayfaya geçebiliriz
-            page: page + 1,
-            limit: limit
-        }
-    }
-    query = query.skip(startIndex).limit(limit);
-    
-    // sort : req.query.sortBy = createdAt:desc, title:asc, most-answered, most-liked
-
-    const sortKey = req.query.sortBy; 
-    if (sortKey === 'most-answered') { // en çok cevaplanan soruları getir
-        query = query.sort('-answerCount -createdAt');
-    } else if (sortKey === 'most-liked') { // en çok beğenilen soruları getir
-        query = query.sort('-likeCount -createdAt');
-    } else {
-        query = query.sort('-createdAt');
-    }
-
-
-    const questions = await query;
-
     return res.status(200)
-        .json({
-            success: true,
-            count: questions.length,
-            pagination: pagination,
-            data: questions
-
-        })
-
+        .json(res.queryResults);
 });
 
 const getSingleQuestion = asyncErrorWrapper(async (req, res, next) => {
