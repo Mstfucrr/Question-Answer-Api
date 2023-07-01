@@ -11,20 +11,34 @@ const { answerQueryMiddleware } = require('../middlewares/query/answerQueryMiddl
 
 router.get('/',
     questionQueryMiddleware(Question, {
-        population: {
-            path: 'user',
-            select: 'name profile_image'
-        }
+        population: [
+            {
+                path: 'user',
+            },
+            {
+                path: 'answers',
+                populate: {
+                    path: 'user',
+                },
+            },
+            {
+                path: 'likes'
+            }
+        ],
     }), getAllQuestions)
-router.get('/:id', checkQuestionExist, answerQueryMiddleware(Question,{
+router.get('/:id', checkQuestionExist, answerQueryMiddleware(Question, {
     population: [
         {
             path: 'user',
-            select: 'name profile_image'
         },
         {
             path: 'answers',
-            select: 'content user'
+            populate: {
+                path: 'user',
+            }
+        },
+        {
+            path: 'likes',
         }
     ]
 }), getSingleQuestion)

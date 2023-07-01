@@ -1,7 +1,22 @@
 const Question = require('../models/Question');
 const CustomError = require('../helpers/error/CustomError');
 const asyncErrorWrapper = require('express-async-handler');
+const { answerQueryMiddleware } = require('../middlewares/query/answerQueryMiddleware');
 
+const populateList = [
+    {
+        path: 'user',
+    },
+    {
+        path: 'answers',
+        populate: {
+            path: 'user',
+        }
+    },
+    {
+        path: 'likes'
+    }
+];
 
 const askNewQuestion = asyncErrorWrapper(async (req, res, next) => {
 
@@ -11,11 +26,20 @@ const askNewQuestion = asyncErrorWrapper(async (req, res, next) => {
         ...information,
         user: req.user.id
     });
+    // result = question popüle answer popüle user
 
     res.status(200)
         .json({
             success: true,
-            data: question
+            // soruyu popüle ederek döndür
+            data: await question.populate([{
+                path: 'user',
+            }, {
+                path: 'answers',
+                populate: {
+                    path: 'user',
+                }
+            }])
         });
 });
 
@@ -37,7 +61,9 @@ const editQuestion = asyncErrorWrapper(async (req, res, next) => {
     question.title = information.title || question.title; // eğer title yoksa eski title'ı kullan
     question.content = information.content || question.content; // eğer content yoksa eski content'ı kullan
 
-    question = await question.save();
+    question = await question.save()
+    question = await question.populate(populateList);
+
 
     return res.status(200)
         .json({
@@ -62,7 +88,7 @@ const likeQuestion = asyncErrorWrapper(async (req, res, next) => {
     const { id } = req.params;
 
     const question = await Question.findById(id); // soruyu bul
- 
+
     if (question.likes.includes(req.user.id)) {
         return next(new CustomError("You already liked this question", 400)); // eğer kullanıcı daha önce like yapmışsa hata döndür
     }
@@ -73,8 +99,8 @@ const likeQuestion = asyncErrorWrapper(async (req, res, next) => {
 
     return res.status(200).json({
         success: true,
-        data: question,
-        message: "Liked the question"
+        data: await question.populate(populateList), // soruyu popüle et    
+        message: "Undo Like for the question"
     })
 
 });
@@ -94,9 +120,10 @@ const undoLikeQuestion = asyncErrorWrapper(async (req, res, next) => {
 
     await question.save(); // kaydet
 
+
     return res.status(200).json({
         success: true,
-        data: question,
+        data: await question.populate(populateList),
         message: "Undo Like for the question"
     })
 });
