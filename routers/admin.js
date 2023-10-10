@@ -10,5 +10,15 @@ router.use([getAccessToRoute, getAdminAccess]) // getaccesstoroute ve getadminac
 router.put('/block/:id',chechUserExist, blockUser)
 router.delete('/delete/:id',chechUserExist, deleteUser)
 
+// for test 
+router.get('/' 
+    , (req, res, next) => {
+        res.status(200).json({
+            success: true,
+            message: "Bu sayfaya giriş izniniz yok",
+            status : 200
+        })
+    })
+
 
 module.exports = router;
